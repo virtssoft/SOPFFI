@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "volunteer": {
+      "title": "Volunteer Application",
+      "description": "Information about people wishing to volunteer for SOPFFI",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "description": "Full name of the volunteer" },
+        "email": { "type": "string", "description": "Contact email" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "skills": { "type": "string", "description": "Specific skills or motivation" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Application status" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "email", "status", "createdAt"]
+    },
+    "partner": {
+      "title": "Partner",
+      "description": "Organizations or individuals supporting SOPFFI",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the partner organization" },
+        "type": { "type": "string", "enum": ["financial", "technical", "local"], "description": "Type of partnership" },
+        "logoUrl": { "type": "string", "description": "URL to the partner logo" },
+        "website": { "type": "string", "description": "Link to partner website" },
+        "description": { "type": "string", "description": "Brief description of the partnership" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "type", "createdAt"]
+    },
+    "activity": {
+      "title": "Activity / Realization",
+      "description": "Projects and actions performed by the organization",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Activity title" },
+        "description": { "type": "string", "description": "Long form description" },
+        "date": { "type": "string", "format": "date", "description": "When it happened" },
+        "location": { "type": "string", "description": "Where it took place (Goma, Kalehe, etc.)" },
+        "category": { "type": "string", "enum": ["education", "agro-pastoral", "health", "entrepreneurship", "human-rights"], "description": "Intervention domain" },
+        "imageUrl": { "type": "string", "description": "Representative image" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "category", "createdAt"]
+    },
+    "post": {
+      "title": "Blog Post",
+      "description": "Articles for the blog section",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "excerpt": { "type": "string", "description": "Short summary for previews" },
+        "author": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "imageUrl": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "content", "publishedAt"]
+    }
+  },
+  "firestore": {
+    "volunteers": {
+      "schema": "volunteer",
+      "description": "Collection of volunteer applications"
+    },
+    "partners": {
+      "schema": "partner",
+      "description": "Collection of partners"
+    },
+    "activities": {
+      "schema": "activity",
+      "description": "Collection of organization activities"
+    },
+    "posts": {
+      "schema": "post",
+      "description": "Collection of blog posts"
+    }
+  }
+}
