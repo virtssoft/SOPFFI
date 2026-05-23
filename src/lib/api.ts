@@ -84,6 +84,44 @@ export function formatImageUrl(path: string | undefined): string {
   return `${API_BASE}${cleanPath}`;
 }
 
+// Helper to parse JSON safely, ignoring trailing PHP errors or warnings
+async function safeJson(res: Response): Promise<any> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    const trimmed = text.trim();
+    try {
+      return JSON.parse(trimmed);
+    } catch (err2) {
+      // Extract valid JSON block between braces/brackets if trailing warning/garbage is present
+      const firstCurly = trimmed.indexOf('{');
+      const firstSquare = trimmed.indexOf('[');
+      if (firstCurly !== -1 && (firstSquare === -1 || firstCurly < firstSquare)) {
+        const lastCurly = trimmed.lastIndexOf('}');
+        if (lastCurly > firstCurly) {
+          try {
+            return JSON.parse(trimmed.substring(firstCurly, lastCurly + 1));
+          } catch (e) {}
+        }
+      } else if (firstSquare !== -1) {
+        const lastSquare = trimmed.lastIndexOf(']');
+        if (lastSquare > firstSquare) {
+          try {
+            return JSON.parse(trimmed.substring(firstSquare, lastSquare + 1));
+          } catch (e) {}
+        }
+      }
+      
+      console.warn("safeJson parsing fallback or failed for text:", text);
+      if (res.ok) {
+        return { status: 'success', text: trimmed };
+      }
+      throw err;
+    }
+  }
+}
+
 // CRUD / API methods
 export const api = {
   // Auth
@@ -94,10 +132,10 @@ export const api = {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur d\'identification');
     }
-    const data = await res.json();
+    const data = await safeJson(res);
     if (data.token) {
       setStoredToken(data.token);
     }
@@ -108,13 +146,14 @@ export const api = {
   async getActions(): Promise<ActionItem[]> {
     const res = await fetch(`${API_BASE}/api/actions`);
     if (!res.ok) throw new Error('Impossible de charger les actions');
-    return res.json();
+    return safeJson(res);
   },
 
+  // Update details with correct API signatures
   async getAction(id: number | string): Promise<ActionItem> {
     const res = await fetch(`${API_BASE}/api/actions/${id}`);
     if (!res.ok) throw new Error('Impossible de charger l\'action');
-    return res.json();
+    return safeJson(res);
   },
 
   async createAction(formData: FormData): Promise<any> {
@@ -127,10 +166,10 @@ export const api = {
       body: formData,
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la création de l\'action');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   async deleteAction(id: number | string): Promise<any> {
@@ -141,23 +180,23 @@ export const api = {
       },
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la suppression de l\'action');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   // Blog
   async getBlogPosts(): Promise<BlogItem[]> {
     const res = await fetch(`${API_BASE}/api/blog`);
     if (!res.ok) throw new Error('Impossible de charger les articles de blog');
-    return res.json();
+    return safeJson(res);
   },
 
   async getBlogPost(idOrSlug: number | string): Promise<BlogItem> {
     const res = await fetch(`${API_BASE}/api/blog/${idOrSlug}`);
     if (!res.ok) throw new Error('Impossible de charger l\'article de blog');
-    return res.json();
+    return safeJson(res);
   },
 
   async createBlogPost(formData: FormData): Promise<any> {
@@ -169,10 +208,10 @@ export const api = {
       body: formData,
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la publication de l\'article');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   async deleteBlogPost(id: number | string): Promise<any> {
@@ -183,17 +222,17 @@ export const api = {
       },
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la suppression de l\'article');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   // Partenaires (Partner Logos)
   async getPartners(): Promise<PartnerItem[]> {
     const res = await fetch(`${API_BASE}/api/partenaires`);
     if (!res.ok) throw new Error('Impossible de charger la liste des partenaires');
-    return res.json();
+    return safeJson(res);
   },
 
   async createPartner(formData: FormData): Promise<any> {
@@ -205,10 +244,10 @@ export const api = {
       body: formData,
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la création du partenaire');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   async deletePartner(id: number | string): Promise<any> {
@@ -219,10 +258,10 @@ export const api = {
       },
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors du retrait du partenaire');
+      const errData = await safeJson(res).catch(() => ({}));
+      throw new Error(errData.error || 'Erreur lors de la suppression du partenaire');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   // Users Management
@@ -233,7 +272,7 @@ export const api = {
       }
     });
     if (!res.ok) throw new Error('Impossible de charger les utilisateurs');
-    return res.json();
+    return safeJson(res);
   },
 
   async createUser(userData: any): Promise<any> {
@@ -246,10 +285,10 @@ export const api = {
       body: JSON.stringify(userData),
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la création de l\'utilisateur');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   async deleteUser(id: number | string): Promise<any> {
@@ -260,16 +299,16 @@ export const api = {
       },
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
+      const errData = await safeJson(res).catch(() => ({}));
       throw new Error(errData.error || 'Erreur lors de la suppression de l\'utilisateur');
     }
-    return res.json();
+    return safeJson(res);
   },
 
   // About Home
   async getAbout(): Promise<AboutResponse> {
     const res = await fetch(`${API_BASE}/api/about`);
     if (!res.ok) throw new Error('Impossible de charger les informations de présentation');
-    return res.json();
+    return safeJson(res);
   }
 };

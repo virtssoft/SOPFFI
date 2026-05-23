@@ -115,7 +115,7 @@ export function Blog() {
                   </p>
                   
                   <div className="mt-auto">
-                    <Link to={`/blog/${post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
+                    <Link to={`/blog/${post.slug || post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
                       Lire l'article <ArrowRight size={14} />
                     </Link>
                   </div>

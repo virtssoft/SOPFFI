@@ -831,7 +831,7 @@ function ProvinceActivitiesManager() {
 function UserManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ full_name: '', email: '', password: '', role: 'admin' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -841,7 +841,7 @@ function UserManager() {
   const fetchUsers = async () => {
     try {
       const data = await api.getUsers();
-      setUsers(data);
+      setUsers(data || []);
     } catch (e) {
       console.error(e);
     }
@@ -853,22 +853,22 @@ function UserManager() {
     try {
       await api.createUser(formData);
       setIsAdding(false);
-      setFormData({ name: '', email: '', password: '' });
+      setFormData({ full_name: '', email: '', password: '', role: 'admin' });
       fetchUsers();
-    } catch (err) {
-      alert('Erreur: ' + err);
+    } catch (err: any) {
+      alert('Erreur: ' + (err.message || err));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Supprimer cet administrateur ?')) {
+    if (window.confirm('Supprimer cet utilisateur / administrateur ?')) {
       try {
         await api.deleteUser(id);
         fetchUsers();
-      } catch (err) {
-        alert('Erreur: ' + err);
+      } catch (err: any) {
+        alert('Erreur: ' + (err.message || err));
       }
     }
   };
@@ -895,8 +895,8 @@ function UserManager() {
               <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Nom complet</label>
               <input 
                 required
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                value={formData.full_name}
+                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                 className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm font-bold"
                 placeholder="Ex: Jean Mukendi"
               />
@@ -923,6 +923,17 @@ function UserManager() {
                 placeholder="Minimum 6 caractères"
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Rôle</label>
+              <select
+                value={formData.role}
+                onChange={e => setFormData({ ...formData, role: e.target.value })}
+                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm font-bold"
+              >
+                <option value="admin">Administrateur (admin)</option>
+                <option value="user">Utilisateur standard (user)</option>
+              </select>
+            </div>
           </div>
           <button 
             type="submit"
@@ -934,11 +945,12 @@ function UserManager() {
         </form>
       ) : (
         <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm">
-          <table className="w-full text-left">
+          <table className="w-full text-left col-span-full">
             <thead className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black tracking-widest text-slate-400">
               <tr>
                 <th className="px-8 py-5">Nom</th>
                 <th className="px-8 py-5">Email</th>
+                <th className="px-8 py-5">Rôle</th>
                 <th className="px-8 py-5 text-right flex-shrink-0">Action</th>
               </tr>
             </thead>
@@ -946,10 +958,15 @@ function UserManager() {
               {users.map(u => (
                 <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-8 py-6">
-                    <p className="font-bold text-slate-900">{u.name}</p>
+                    <p className="font-bold text-slate-900">{u.full_name || u.name}</p>
                   </td>
                   <td className="px-8 py-6">
                     <p className="text-xs font-semibold text-slate-600">{u.email}</p>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="px-2.5 py-1 bg-blue-50 text-sopffi-blue text-[9px] font-black uppercase tracking-wider rounded-lg border border-blue-100">
+                      {u.role || 'admin'}
+                    </span>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <button 
