@@ -37,21 +37,12 @@ export function Blog() {
           tags: item.tags ? item.tags.split(',').map(t => t.trim()) : []
         }));
         
-        // Merge with baseline articles
-        const merged = [...postsData, ...BASELINE_POSTS].map(p => ({
-          ...p,
-          slug: p.slug || slugify(p.title)
-        }));
         // Sort descending by date
-        merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-        setPosts(merged);
+        const sorted = [...postsData].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        setPosts(sorted);
       } catch (error) {
-        console.error('Error fetching posts from SOPFFI API, using baseline:', error);
-        const mappedBaseline = BASELINE_POSTS.map(p => ({
-          ...p,
-          slug: p.slug || slugify(p.title)
-        }));
-        setPosts(mappedBaseline);
+        console.error('Error fetching posts from SOPFFI API:', error);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
@@ -124,7 +115,7 @@ export function Blog() {
                   </p>
                   
                   <div className="mt-auto">
-                    <Link to={`/blog/${post.slug || post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
+                    <Link to={`/blog/${post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
                       Lire l'article <ArrowRight size={14} />
                     </Link>
                   </div>

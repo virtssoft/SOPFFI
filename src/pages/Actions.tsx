@@ -17,7 +17,7 @@ import {
   Globe,
   Info
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, formatImageUrl } from '../lib/api';
 
 interface Realization {
@@ -286,6 +286,7 @@ const BASELINE_REALIZATIONS: Realization[] = [
 ];
 
 export function Actions() {
+  const navigate = useNavigate();
   const [selectedProvince, setSelectedProvince] = useState<string>('all');
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -333,8 +334,8 @@ export function Actions() {
     fetchProvinceActivities();
   }, []);
 
-  // Merge default set with database modifications
-  const allRealizations = [...BASELINE_REALIZATIONS, ...activities];
+  // Only show actions from the database
+  const allRealizations = activities;
 
   // Apply Search, Province & Domain Filtering
   const filteredRealizations = allRealizations.filter((item) => {
@@ -532,7 +533,13 @@ export function Actions() {
                   key={item.id}
                   id={`card-container-${item.id}`}
                   className="group cursor-pointer bg-white rounded-[2.5rem] overflow-hidden border border-slate-150/60 flex flex-col justify-between hover:shadow-xl hover:border-slate-200 transition-all duration-300 shadow-sm"
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => {
+                    if (item.id.startsWith('base-')) {
+                      setSelectedItem(item);
+                    } else {
+                      navigate(`/actions/${item.id}`);
+                    }
+                  }}
                 >
                   
                   {/* Image Block */}

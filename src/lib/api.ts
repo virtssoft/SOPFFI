@@ -28,6 +28,12 @@ export interface BlogItem {
   province?: string;
   created_at?: string;
   published_at?: string;
+  location?: string;
+  domain?: string;
+  tag?: string;
+  beneficiaries?: string;
+  status?: string;
+  key_achievements?: string;
 }
 
 export interface PartnerItem {
@@ -43,15 +49,17 @@ export interface AboutResponse {
 
 // Get JWT token from storage
 export function getStoredToken(): string | null {
-  return localStorage.getItem('sopffi_jwt') || sessionStorage.getItem('sopffi_jwt');
+  return localStorage.getItem('sopffi_jwt') || sessionStorage.getItem('sopffi_jwt') || localStorage.getItem('admin_token');
 }
 
 // Set JWT token to storage
 export function setStoredToken(token: string, remember: boolean = true) {
   if (remember) {
     localStorage.setItem('sopffi_jwt', token);
+    localStorage.setItem('admin_token', token);
   } else {
     sessionStorage.setItem('sopffi_jwt', token);
+    localStorage.setItem('admin_token', token);
   }
 }
 
@@ -59,6 +67,7 @@ export function setStoredToken(token: string, remember: boolean = true) {
 export function removeStoredToken() {
   localStorage.removeItem('sopffi_jwt');
   sessionStorage.removeItem('sopffi_jwt');
+  localStorage.removeItem('admin_token');
 }
 
 // Generate Authorization Header

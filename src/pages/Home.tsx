@@ -327,7 +327,7 @@ export function Home() {
             ) : latestActions.length > 0 ? (
               <div className="grid md:grid-cols-3 gap-12 text-left">
                 {latestActions.map((action) => (
-                  <Link key={action.id} to="/actions" className="space-y-4 group block cursor-pointer">
+                  <Link key={action.id} to={`/actions/${action.id}`} className="space-y-4 group block cursor-pointer">
                     <div className="aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 relative border border-slate-700">
                       <img 
                         src={formatImageUrl(action.image_path)} 

@@ -24,7 +24,6 @@ export function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    sessionStorage.removeItem('adminBypass');
     logout();
     navigate('/login');
   };
@@ -95,32 +94,110 @@ export function Dashboard() {
 }
 
 function Overview() {
+  const [aboutData, setAboutData] = useState<any>(null);
+  const [articlesCount, setArticlesCount] = useState<number>(0);
+  const [actionsCount, setActionsCount] = useState<number>(0);
+  const [volunteersCount, setVolunteersCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOverview() {
+      try {
+        const [blogPosts, actions, aboutInfo] = await Promise.all([
+          api.getBlogPosts().catch(() => []),
+          api.getActions().catch(() => []),
+          api.getAbout().catch(() => null)
+        ]);
+
+        setArticlesCount(blogPosts.length);
+        setActionsCount(actions.length);
+        setAboutData(aboutInfo);
+
+        const stored = localStorage.getItem('sopffi_volunteers');
+        if (stored) {
+          setVolunteersCount(JSON.parse(stored).length);
+        } else {
+          setVolunteersCount(2);
+        }
+      } catch (err) {
+        console.error('Failed to load overview dynamic data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOverview();
+  }, []);
+
+  const isAboutImageMissing = 
+    aboutData?.status === 'missing' || 
+    aboutData?.status === 'error' || 
+    (aboutData?.status && String(aboutData.status).toLowerCase().includes('manqu')) ||
+    (aboutData?.status && String(aboutData.status).toLowerCase().includes('miss')) ||
+    !aboutData?.image_url;
+
   const stats = [
-    { label: 'Articles', val: '12', color: 'text-blue-600 bg-blue-50' },
-    { label: 'Réalisations', val: '48', color: 'text-sopffi-red bg-red-50' },
-    { label: 'Bénévoles', val: '15', color: 'text-sopffi-yellow bg-yellow-50' },
+    { label: 'Articles', val: String(articlesCount), color: 'text-blue-600 bg-blue-50' },
+    { label: 'Réalisations', val: String(actionsCount), color: 'text-sopffi-red bg-red-50' },
+    { label: 'Bénévoles', val: String(volunteersCount), color: 'text-sopffi-yellow bg-yellow-50' },
   ];
 
   return (
     <div className="space-y-12">
-      <header>
-        <h2 className="text-3xl font-black text-slate-900 mb-2 leading-none">Tableau de bord</h2>
-        <p className="text-slate-500 font-medium italic italic">Gestion du contenu et des engagements SOPFFI.</p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 mb-2 leading-none">Tableau de bord</h2>
+          <p className="text-slate-500 font-medium italic">Gestion du contenu et des engagements SOPFFI.</p>
+        </div>
+        {aboutData && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs text-slate-600 font-bold">
+            <span className={`w-2.5 h-2.5 rounded-full ${isAboutImageMissing ? 'bg-amber-500' : 'bg-green-500 animate-pulse'}`} />
+            Section À Propos : {isAboutImageMissing ? 'Image manquante' : 'Image en ligne'}
+          </div>
+        )}
       </header>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        {stats.map((s, i) => (
-          <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-bl-[4rem] flex items-center justify-center translate-x-6 -translate-y-6 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform">
-               <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center font-bold`}>
-                 {s.label[0]}
-               </div>
+      {/* About Section Alert Box */}
+      {isAboutImageMissing && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50/60 p-6 md:p-8 rounded-[2rem] border border-amber-250 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-800 text-[10px] font-black uppercase tracking-widest rounded-lg">Alerte Contenu</span>
+              <span className="font-extrabold text-sm text-amber-900 font-sans">À Propos : Photo de présentation manquante</span>
             </div>
-            <p className="text-5xl font-black text-slate-900 mb-2">{s.val}</p>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{s.label}</p>
+            <p className="text-sm text-slate-600 font-sans leading-relaxed max-w-2xl">
+              La photo principale <code className="bg-amber-100/60 font-mono text-amber-800 px-1.5 py-0.5 rounded text-xs font-bold">about.jpg</code> est introuvable à sa place sur votre serveur d'hébergement. 
+              Pour vous assurer un affichage optimal de la section présentation ("À Propos"), veuillez s'il vous plaît téléverser votre image via le <strong>Gestionnaire de fichiers LWS (FTP/File Manager)</strong>.
+            </p>
           </div>
-        ))}
-      </div>
+          <div className="flex-shrink-0">
+            <span className="inline-block px-4 py-2 bg-white rounded-xl border border-amber-200 text-xs font-black text-amber-800 font-mono uppercase">
+              about.jpg attendu
+            </span>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid md:grid-cols-3 gap-8">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 animate-pulse h-40" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-8">
+          {stats.map((s, i) => (
+            <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-bl-[4rem] flex items-center justify-center translate-x-6 -translate-y-6 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform">
+                 <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center font-bold`}>
+                   {s.label[0]}
+                 </div>
+              </div>
+              <p className="text-5xl font-black text-slate-900 mb-2">{s.val}</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="bg-sopffi-blue p-12 rounded-[3.5rem] text-white overflow-hidden relative shadow-2xl shadow-blue-200">
          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[100px] -mr-32 -mt-32" />
@@ -638,119 +715,88 @@ function ActionsManager() {
 }
 
 function PartenaireManager() {
-  const [isAdding, setIsAdding] = useState(false);
   const [partners, setPartners] = useState<any[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({ name: '' });
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPartners = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getPartners();
+      setPartners(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchPartners();
   }, []);
 
-  const fetchPartners = async () => {
-    try {
-      const data = await api.getPartners();
-      setPartners(data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!imageFile) {
-      alert('Veuillez joindre l\'image du logo du partenaire !');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const d = new FormData();
-      d.append('name', formData.name);
-      d.append('logo', imageFile);
-      await api.createPartner(d);
-      setIsAdding(false);
-      setImageFile(null);
-      setFormData({ name: '' });
-      fetchPartners();
-    } catch (err) {
-      alert('Erreur: ' + err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Retirer ce partenaire ?')) {
-      try {
-        await api.deletePartner(id);
-        fetchPartners();
-      } catch (err) {
-        alert('Erreur: ' + err);
-      }
-    }
-  };
-
   return (
     <div className="space-y-12 font-sans">
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
            <h2 className="text-2xl font-black text-slate-900">Partenaires Stratégiques</h2>
            <p className="text-slate-500 font-medium italic text-sm">Organisez les logos des institutions et fondations qui défilent sur la page d'accueil.</p>
         </div>
         <button 
-          onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all active:scale-95"
+          onClick={fetchPartners}
+          disabled={loading}
+          className="flex items-center justify-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold font-sans shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95 disabled:bg-slate-300"
         >
-          {isAdding ? 'Fermer' : <><Plus size={20} /> Ajouter un Partenaire</>}
+          {loading ? 'Chargement...' : 'Rafraîchir les logos'}
         </button>
       </div>
 
-      {isAdding ? (
-        <form onSubmit={handleAdd} className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 max-w-xl space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Nom du partenaire</label>
-              <input 
-                required
-                value={formData.name}
-                onChange={e => setFormData({ name: e.target.value })}
-                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm font-bold"
-                placeholder="Ex: UNICEF Goma, USAID, etc."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Fichier Logo (.png transparent recommandé)</label>
-              <input 
-                required
-                type="file"
-                accept="image/*"
-                onChange={e => setImageFile(e.target.files?.[0] || null)}
-                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm"
-              />
-              <p className="text-[10px] text-slate-400 font-medium italic mt-1 ml-2">
-                Taille recommandée : 320 × 120 pixels (ratio horizontal), max. 2 Mo pour un chargement ultra-rapide.
-              </p>
-            </div>
+      {/* FTP Instructions Banner */}
+      <div className="bg-gradient-to-r from-blue-50/80 to-slate-50 p-6 md:p-8 rounded-[2.5rem] border border-blue-200/50 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-1 bg-sopffi-blue text-white text-[10px] font-black uppercase tracking-widest rounded-lg">Architecture Zéro Base de Données</span>
+          <span className="font-extrabold text-sm text-slate-900 font-sans">Gestion directe sur votre hébergement LWS</span>
+        </div>
+        <p className="text-sm text-slate-600 font-sans leading-relaxed">
+          Pour ajouter ou retirer un partenaire de votre carrousel, de manière simple et sécurisée sans base de données, 
+          utilisez directement le <strong>File Manager de votre espace LWS</strong> ou votre client FTP habituel :
+        </p>
+        <div className="grid md:grid-cols-2 gap-4 pt-2">
+          <div className="bg-white p-4 rounded-2xl border border-slate-150 space-y-1">
+            <h4 className="font-black text-xs text-green-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Ajouter un partenaire
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed font-sans">
+              Glissez-déposez simplement l'image ou le logo de l'institution dans le dossier : <br />
+              <code className="bg-slate-50 font-mono text-[10px] p-1 rounded font-bold text-slate-700 select-all">/uploads/partenaires/</code>
+            </p>
           </div>
-          <button 
-            type="submit"
-            disabled={submitting}
-            className="w-full py-5 bg-sopffi-blue text-white rounded-2xl font-black text-sm uppercase hover:bg-blue-700 transition-all disabled:bg-slate-300"
-          >
-            {submitting ? 'Transfert en cours...' : 'Ajouter le Partenaire'}
-          </button>
-        </form>
+          <div className="bg-white p-4 rounded-2xl border border-slate-150 space-y-1">
+            <h4 className="font-black text-xs text-rose-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              Supprimer un partenaire
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed font-sans">
+              Supprimez simplement le fichier de l'image (ex. <code className="font-mono text-[10px] bg-slate-50 px-1 py-0.5 rounded">logo.png</code>) du même dossier : <br />
+              <code className="bg-slate-50 font-mono text-[10px] p-1 rounded font-bold text-slate-700 select-all">/uploads/partenaires/</code>
+            </p>
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-400 font-medium font-sans italic pt-1">
+          💡 Une fois vos modifications FTP effectuées, cliquez sur le bouton <strong>"Rafraîchir les logos"</strong> ci-dessus pour observer le résultat en temps réel.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {[1,2,3,4].map(n => (
+            <div key={n} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-36 animate-pulse" />
+          ))}
+        </div>
       ) : (
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {partners.map(p => (
-            <div key={p.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-between relative group text-center">
-              <button 
-                onClick={() => handleDelete(p.id)}
-                className="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-              >
-                <Trash2 size={16} />
-              </button>
+          {partners.map((p, index) => (
+            <div key={index} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-between relative group text-center">
               <div className="h-24 flex items-center justify-center p-2 mb-4 mt-2">
                 <img 
                   src={p.url} 
@@ -759,16 +805,16 @@ function PartenaireManager() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="font-extrabold text-xs text-slate-700 uppercase tracking-tight">{p.name}</p>
+                <p className="font-extrabold text-xs text-slate-700 uppercase tracking-tight">{p.name || `Partenaire #${index + 1}`}</p>
                 <span className="inline-block px-2.5 py-0.5 bg-slate-50 border border-slate-100 rounded-full text-[9px] font-bold text-slate-400">
-                  Rendu : 240px × 96px
+                  Logo actif
                 </span>
               </div>
             </div>
           ))}
           {partners.length === 0 && (
             <div className="col-span-full p-20 text-center text-slate-400 italic bg-white rounded-3xl border border-slate-100">
-              Aucun logo partenaire configuré.
+              Aucun logo partenaire trouvé dans le dossier /uploads/partenaires/
             </div>
           )}
         </div>

@@ -9,8 +9,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user } = useAuth();
 
-  const hasBypass = typeof window !== 'undefined' && sessionStorage.getItem('adminBypass') === 'true';
-  const isUserLoggedIn = !!user || hasBypass;
+  const isUserLoggedIn = !!user && user.role === 'admin';
 
   const navLinks = [
     { name: 'Accueil', path: '/' },
@@ -173,9 +172,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span>Développement par <span className="text-white font-bold">virtssoft</span></span>
             <Link 
               to="/dashboard" 
-              onClick={() => {
-                sessionStorage.setItem('adminBypass', 'true');
-              }}
               className="hover:text-white"
             >
               Admin
