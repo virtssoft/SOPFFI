@@ -47,6 +47,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Province Activities
+    match /province_activities/{activityId} {
+      allow read: if true; // Public list
+      allow write: if isAdmin();
+    }
+
     // Admins helper
     match /admins/{adminId} {
       allow read: if isSignedIn() && request.auth.uid == adminId;

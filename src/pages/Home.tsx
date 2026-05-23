@@ -1,11 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Heart, Users, Briefcase, GraduationCap, Sprout, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VolunteerModal } from '../components/VolunteerModal';
+import { api, formatImageUrl } from '../lib/api';
 
 export function Home() {
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
+  const [partnerLogos, setPartnerLogos] = useState<any[]>([]);
+  const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1000');
+  const [latestActions, setLatestActions] = useState<any[]>([]);
+  const [loadingActions, setLoadingActions] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Fetch dynamic partners
+    api.getPartners()
+      .then(data => {
+        if (data && data.length > 0) {
+          setPartnerLogos(data);
+        }
+      })
+      .catch(err => console.error('Failed to load partners from API', err));
+
+    // Fetch dynamic hero / about image
+    api.getAbout()
+      .then(data => {
+        if (data && data.image_url) {
+          setHeroImage(data.image_url);
+        }
+      })
+      .catch(err => console.error('Failed to load about details from API', err));
+
+    // Fetch 3 latest actions
+    api.getActions()
+      .then(data => {
+        if (data && data.length > 0) {
+          const sorted = [...data].sort((a, b) => b.id - a.id);
+          setLatestActions(sorted.slice(0, 3));
+        }
+      })
+      .catch(err => console.error('Failed to load actions from API', err))
+      .finally(() => setLoadingActions(false));
+  }, []);
+
   const stats = [
     { label: 'Membres Actifs', value: '1,422', icon: Users },
     { label: 'Femmes Accompagnées', value: '1,008', icon: Heart },
@@ -85,7 +122,7 @@ export function Home() {
             >
               <div className="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl relative z-10">
                 <img 
-                  src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1000" 
+                  src={heroImage} 
                   alt="SOPFFI Impact" 
                   className="w-full h-full object-cover"
                 />
@@ -163,6 +200,112 @@ export function Home() {
         </div>
       </section>
 
+      {/* Partners Scrolling Section */}
+      <section className="py-20 bg-slate-50 border-t border-slate-150 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
+          <span className="inline-block px-4 py-1.5 bg-blue-100 text-sopffi-blue rounded-full text-xs font-black uppercase tracking-widest mb-4">
+            Coalition & Impact
+          </span>
+          <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+            Ils soutiennent nos actions de terrain
+          </h3>
+          <p className="text-slate-500 font-medium italic text-sm mt-2">
+            Des partenaires stratégiques engagés avec SOPFFI pour le bien-être communautaire en RD Congo.
+          </p>
+        </div>
+
+        {/* Scrolling wrapper to host the infinite horizontal marquee */}
+        <div className="relative w-full overflow-hidden flex items-center">
+          {/* Left / Right overlays for smooth fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
+
+          {/* Core Track running the custom css animation loop */}
+          {partnerLogos.length > 0 ? (
+            <div className="flex gap-8 animate-infinite-scroll py-4 hover:[animation-play-state:paused] cursor-pointer w-max">
+              {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((partner, index) => (
+                <div
+                  key={`partner-api-${index}`}
+                  className="flex items-center justify-center bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-10 py-5 shadow-sm hover:shadow-md transition-all duration-300 min-w-[240px] h-24"
+                >
+                  <img
+                    src={partner.url}
+                    alt={partner.name}
+                    className="max-h-16 max-w-[200px] object-contain transition-transform duration-300 hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  {!partner.url && (
+                    <span className="font-extrabold text-slate-800 text-sm">{partner.name}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-8 animate-infinite-scroll py-4 hover:[animation-play-state:paused] cursor-pointer w-max">
+              {/* Round 1 of Logos */}
+              {[
+                { name: 'UNICEF RDC', tag: 'Nations Unies', logoText: 'UN', color: 'text-sky-600 bg-sky-50 border-sky-100' },
+                { name: 'USAID Congo', tag: 'Aide Internationale', logoText: 'US', color: 'text-red-700 bg-red-50 border-red-100' },
+                { name: 'PNUD RDC', tag: 'Nations Unies', logoText: 'PN', color: 'text-blue-600 bg-blue-50 border-blue-100' },
+                { name: 'HEAL Africa', tag: 'Santé & Protection', logoText: 'HA', color: 'text-violet-600 bg-violet-50 border-violet-100' },
+                { name: 'Fonds Femmes Congolaises', tag: 'Genre & Plaidoyer', logoText: 'FC', color: 'text-rose-600 bg-rose-50 border-rose-100' },
+                { name: 'Union Européenne', tag: 'Impact Européen', logoText: 'UE', color: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
+                { name: 'CARITAS Goma', tag: 'Secours Humanitaire', logoText: 'CA', color: 'text-amber-600 bg-amber-50 border-amber-100' },
+                { name: 'PAM (WFP)', tag: 'Urgence Alimentaire', logoText: 'PM', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+              ].map((partner, index) => (
+                <div
+                  key={`p1-${index}`}
+                  className="flex items-center gap-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-6 py-4 shadow-sm hover:shadow-md transition-all duration-300 min-w-[260px]"
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm border flex-shrink-0 ${partner.color}`}>
+                    {partner.logoText}
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-extrabold text-slate-800 text-sm leading-tight tracking-tight whitespace-nowrap">
+                      {partner.name}
+                    </h4>
+                    <p className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
+                      {partner.tag}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Duplicate Round 2 of Logos for seamless marquee wrapping */}
+              {[
+                { name: 'UNICEF RDC', tag: 'Nations Unies', logoText: 'UN', color: 'text-sky-600 bg-sky-50 border-sky-100' },
+                { name: 'USAID Congo', tag: 'Aide Internationale', logoText: 'US', color: 'text-red-700 bg-red-50 border-red-100' },
+                { name: 'PNUD RDC', tag: 'Nations Unies', logoText: 'PN', color: 'text-blue-600 bg-blue-50 border-blue-100' },
+                { name: 'HEAL Africa', tag: 'Santé & Protection', logoText: 'HA', color: 'text-violet-600 bg-violet-50 border-violet-100' },
+                { name: 'Fonds Femmes Congolaises', tag: 'Genre & Plaidoyer', logoText: 'FC', color: 'text-rose-600 bg-rose-50 border-rose-100' },
+                { name: 'Union Européenne', tag: 'Impact Européen', logoText: 'UE', color: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
+                { name: 'CARITAS Goma', tag: 'Secours Humanitaire', logoText: 'CA', color: 'text-amber-600 bg-amber-50 border-amber-100' },
+                { name: 'PAM (WFP)', tag: 'Urgence Alimentaire', logoText: 'PM', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+              ].map((partner, index) => (
+                <div
+                  key={`p2-${index}`}
+                  className="flex items-center gap-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-6 py-4 shadow-sm hover:shadow-md transition-all duration-300 min-w-[260px]"
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm border flex-shrink-0 ${partner.color}`}>
+                    {partner.logoText}
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-extrabold text-slate-800 text-sm leading-tight tracking-tight whitespace-nowrap">
+                      {partner.name}
+                    </h4>
+                    <p className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
+                      {partner.tag}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Realizations Highlight */}
       <section className="py-24 bg-slate-900 text-white overflow-hidden relative">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/10 blur-3xl -z-0" />
@@ -170,35 +313,46 @@ export function Home() {
             <h2 className="text-sm font-black text-sopffi-red uppercase tracking-[0.2em] mb-4">Nos Réalisations</h2>
             <h3 className="text-4xl font-bold mb-16">Changer des vies, une action à la fois.</h3>
             
-            <div className="grid md:grid-cols-3 gap-12 text-left">
-              <div className="space-y-4">
-                <div className="aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 group cursor-pointer border border-slate-700">
-                  <div className="p-6 h-full flex flex-col justify-end bg-gradient-to-t from-slate-950 to-transparent">
-                    <p className="font-bold text-lg mb-1">Projet "MAKAYABO"</p>
-                    <p className="text-xs text-slate-400">Autonomisation через Poisson Salé</p>
+            {loadingActions ? (
+              <div className="grid md:grid-cols-3 gap-12 text-left">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="space-y-4 animate-pulse">
+                    <div className="aspect-video bg-slate-800 rounded-2xl mb-6 border border-slate-700" />
+                    <div className="h-4 bg-slate-800 rounded w-2/3" />
+                    <div className="h-3 bg-slate-800 rounded w-full" />
+                    <div className="h-3 bg-slate-800 rounded w-5/6" />
                   </div>
-                </div>
-                <p className="text-sm text-slate-400">Lancement du projet de valorisation des ressources halieutiques locales par la transformation de poissons à Goma.</p>
+                ))}
               </div>
-              <div className="space-y-4">
-                <div className="aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 group cursor-pointer border border-slate-700">
-                  <div className="p-6 h-full flex flex-col justify-end bg-gradient-to-t from-slate-950 to-transparent">
-                    <p className="font-bold text-lg mb-1">Résilience Climatique</p>
-                    <p className="text-xs text-slate-400">Territoire de Kabare</p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-400">Installation de jardins potagers et pépinières d'arbres pour lutter contre la malnutrition et le changement climatique.</p>
+            ) : latestActions.length > 0 ? (
+              <div className="grid md:grid-cols-3 gap-12 text-left">
+                {latestActions.map((action) => (
+                  <Link key={action.id} to="/actions" className="space-y-4 group block cursor-pointer">
+                    <div className="aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 relative border border-slate-700">
+                      <img 
+                        src={formatImageUrl(action.image_path)} 
+                        alt={action.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-transparent flex flex-col justify-end p-6">
+                        <p className="font-bold text-lg mb-1 group-hover:text-sopffi-blue transition-colors line-clamp-1">{action.title}</p>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{action.tag || action.domain} • {action.location || action.province}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-400 line-clamp-3 leading-relaxed">{action.excerpt || (action.content ? action.content.substring(0, 140) + '...' : '')}</p>
+                  </Link>
+                ))}
               </div>
-              <div className="space-y-4">
-                <div className="aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 group cursor-pointer border border-slate-700">
-                  <div className="p-6 h-full flex flex-col justify-end bg-gradient-to-t from-slate-950 to-transparent">
-                    <p className="font-bold text-lg mb-1">Soutien Scolaire</p>
-                    <p className="text-xs text-slate-400">Education pour tous</p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-400">Distribution de fournitures scolaires pour les enfants vulnérables et orphelins de la ville de Goma.</p>
+            ) : (
+              <div className="p-12 text-center bg-slate-800/40 rounded-3xl border border-slate-700/60 max-w-2xl mx-auto my-6">
+                <p className="text-slate-400 font-medium text-lg leading-relaxed">
+                  Aucune réalisation n'est encore enregistrée pour le moment.
+                </p>
+                <p className="text-slate-500 text-sm mt-2 italic">
+                  Nos équipes de terrain sont à pied d'œuvre et publieront de nouvelles activités d'impact très bientôt.
+                </p>
               </div>
-            </div>
+            )}
             
             <div className="mt-16">
               <Link to="/actions" className="inline-flex items-center gap-3 text-sopffi-blue font-bold hover:text-blue-400 transition-colors bg-white px-6 py-3 rounded-xl">

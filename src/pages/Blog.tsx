@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Calendar, User, ArrowRight, Tag, Search } from 'lucide-react';
+import { Calendar, User, ArrowRight, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { BASELINE_POSTS, slugify } from '../data/blogData';
+import { api, formatImageUrl } from '../lib/api';
 
 interface Post {
   id: string;
+  slug?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -23,17 +24,34 @@ export function Blog() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const postsRef = collection(db, 'posts');
-        const q = query(postsRef, orderBy('publishedAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const postsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Post[];
-        setPosts(postsData);
+        const responseList = await api.getBlogPosts();
+        const postsData: Post[] = responseList.map(item => ({
+          id: String(item.id),
+          slug: item.slug || slugify(item.title),
+          title: item.title,
+          content: item.content,
+          excerpt: item.excerpt,
+          author: item.author || 'Admin SOPFFI',
+          publishedAt: item.published_at || item.created_at || new Date().toISOString(),
+          imageUrl: formatImageUrl(item.image_path),
+          tags: item.tags ? item.tags.split(',').map(t => t.trim()) : []
+        }));
+        
+        // Merge with baseline articles
+        const merged = [...postsData, ...BASELINE_POSTS].map(p => ({
+          ...p,
+          slug: p.slug || slugify(p.title)
+        }));
+        // Sort descending by date
+        merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        setPosts(merged);
       } catch (error) {
-        // Only log if it's not a missing collection error (which is normal at start)
-        console.error('Error fetching posts:', error);
+        console.error('Error fetching posts from SOPFFI API, using baseline:', error);
+        const mappedBaseline = BASELINE_POSTS.map(p => ({
+          ...p,
+          slug: p.slug || slugify(p.title)
+        }));
+        setPosts(mappedBaseline);
       } finally {
         setLoading(false);
       }
@@ -45,7 +63,7 @@ export function Blog() {
     <div className="bg-slate-50 min-h-screen py-20 lg:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mb-20 text-center">
-           <h1 className="text-5xl font-bold text-slate-900 mb-6 tracking-tight">Blog & Actualités</h1>
+           <h1 className="text-5xl font-bold text-slate-900 mb-6 tracking-tight">Actualités & Mises à jour</h1>
            <p className="text-xl text-slate-500 max-w-2xl mx-auto italic font-medium leading-relaxed">
              Suivez nos récentes campagnes, témoignages et l'avancement de nos projets sur le terrain.
            </p>
@@ -106,7 +124,7 @@ export function Blog() {
                   </p>
                   
                   <div className="mt-auto">
-                    <Link to={`/blog/${post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
+                    <Link to={`/blog/${post.slug || post.id}`} className="inline-flex items-center gap-2 font-black text-sopffi-blue uppercase text-[10px] tracking-widest hover:gap-3 transition-all">
                       Lire l'article <ArrowRight size={14} />
                     </Link>
                   </div>

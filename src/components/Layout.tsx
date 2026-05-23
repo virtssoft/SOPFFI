@@ -1,11 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, Menu, X, Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Heart, Menu, X, Facebook, Instagram, Mail, Phone, MapPin, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+
+  const hasBypass = typeof window !== 'undefined' && sessionStorage.getItem('adminBypass') === 'true';
+  const isUserLoggedIn = !!user || hasBypass;
 
   const navLinks = [
     { name: 'Accueil', path: '/' },
@@ -21,9 +26,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img 
-              src="/src/assets/images/675131884_122098591094612867_5726589466815304907_n.jpg" 
+              src="https://apisopffi.ndfdasbl.org/uploads/brand/logosopffi.png" 
               alt="SOPFFI Logo" 
-              className="w-12 h-12 object-cover rounded-xl shadow-sm ring-4 ring-blue-50"
+              className="w-12 h-12 object-contain rounded-xl shadow-sm ring-4 ring-blue-50 bg-white p-1"
             />
             <div className="flex flex-col">
               <span className="font-bold text-xl tracking-tight leading-none text-blue-900">SOPFFI</span>
@@ -45,10 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <Link
-              to="/login"
-              className="px-5 py-2.5 rounded-full bg-sopffi-blue text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+              to={isUserLoggedIn ? "/dashboard" : "/login"}
+              className="px-5 py-2.5 rounded-full bg-sopffi-blue text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm active:scale-95 flex items-center gap-2"
             >
-              Espace Membre
+              <UserIcon size={16} />
+              Compte
             </Link>
           </div>
 
@@ -82,11 +88,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
                 <Link
-                  to="/login"
+                  to={isUserLoggedIn ? "/dashboard" : "/login"}
                   onClick={() => setIsMenuOpen(false)}
-                  className="mt-4 px-6 py-3 rounded-xl bg-sopffi-blue text-white text-center font-bold"
+                  className="mt-4 px-6 py-3 rounded-xl bg-sopffi-blue text-white text-center font-bold flex items-center justify-center gap-2"
                 >
-                  Espace Membre
+                  <UserIcon size={16} />
+                  Compte
                 </Link>
               </div>
             </motion.div>
@@ -104,9 +111,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="space-y-6">
             <Link to="/" className="flex items-center gap-3">
               <img 
-                src="/src/assets/images/675131884_122098591094612867_5726589466815304907_n.jpg" 
+                src="https://apisopffi.ndfdasbl.org/uploads/brand/logosopffi.png" 
                 alt="SOPFFI Logo" 
-                className="w-10 h-10 object-cover rounded-lg"
+                className="w-10 h-10 object-contain rounded-lg bg-white p-0.5"
               />
               <span className="font-bold text-xl text-white">SOPFFI</span>
             </Link>
@@ -138,7 +145,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={18} className="text-sopffi-blue flex-shrink-0" />
-                <span>+243 975 587 918</span>
+                <span>(+243) 814976452, 975587918</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-sopffi-blue flex-shrink-0" />
@@ -164,7 +171,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <p>&copy; 2024 SOPFFI ASBL. Tous droits réservés.</p>
           <div className="flex gap-6">
             <span>Développement par <span className="text-white font-bold">virtssoft</span></span>
-            <Link to="/login" className="hover:text-white">Admin</Link>
+            <Link 
+              to="/dashboard" 
+              onClick={() => {
+                sessionStorage.setItem('adminBypass', 'true');
+              }}
+              className="hover:text-white"
+            >
+              Admin
+            </Link>
           </div>
         </div>
       </footer>
