@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { VolunteerModal } from '../components/VolunteerModal';
 import { api, formatImageUrl } from '../lib/api';
 import { BASELINE_POSTS, slugify } from '../data/blogData';
+import { Meta } from '../components/Meta';
 
 export function Home() {
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
@@ -132,6 +133,12 @@ export function Home() {
 
   return (
     <div className="overflow-hidden">
+      <Meta 
+        title="SOPFFI - Solidarité pour la Promotion de la Famille et de la Femme Indigente en RDC"
+        description="SOPFFI est une association sans but lucratif engagée pour l’autonomisation socio-économique des femmes et familles indigentes, l'éducation des orphelins, la santé communautaire et le reboisement en République Démocratique du Congo."
+        keywords="SOPFFI, association humanitaire RDC, autonomisation femme Goma, orphelins RDC, micro-crédits Goma, reboisement Kalehe, santé communautaire Congo"
+        url="https://sopffi-virtssoft.org/"
+      />
       {/* Hero Section Carousel */}
       <section className="relative pt-10 pb-20 lg:pt-20 lg:pb-32 bg-slate-50 min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
         {/* Background decorative blobs */}

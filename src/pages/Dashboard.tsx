@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api, formatImageUrl } from '../lib/api';
+import { Meta } from '../components/Meta';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -32,6 +33,12 @@ export function Dashboard() {
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans relative">
+      <Meta 
+        title="Administration SOPFFI - Tableau de bord"
+        description="Gérer les publications, réalisations, membres et actualités de SOPFFI."
+        keywords="admin SOPFFI, gestion SOPFFI"
+        url="https://sopffi-virtssoft.org/dashboard"
+      />
       {/* Backdrop for mobile */}
       {isSidebarOpen && (
         <div 

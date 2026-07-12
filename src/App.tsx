@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Layout } from './components/Layout';
 import { ScrollToTop } from './components/ScrollToTop';
 import { Home } from './pages/Home';
@@ -28,30 +29,32 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/a-propos" element={<About />} />
-            <Route path="/actions" element={<Actions />} />
-            <Route path="/actions/:id" element={<PostDetail />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:id" element={<PostDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/virtssoft" element={<Virtssoft />} />
-            <Route 
-              path="/dashboard/*" 
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-          </Routes>
-        </Layout>
-      </Router>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <Router>
+          <ScrollToTop />
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/a-propos" element={<About />} />
+              <Route path="/actions" element={<Actions />} />
+              <Route path="/actions/:id" element={<PostDetail />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<PostDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/virtssoft" element={<Virtssoft />} />
+              <Route 
+                path="/dashboard/*" 
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                } 
+              />
+            </Routes>
+          </Layout>
+        </Router>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }

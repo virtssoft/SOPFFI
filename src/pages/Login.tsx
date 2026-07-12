@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { Eye, EyeOff } from 'lucide-react';
+import { Meta } from '../components/Meta';
 
 export function Login() {
   const navigate = useNavigate();
@@ -31,6 +32,12 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Meta 
+        title="Connexion Membre - SOPFFI"
+        description="Espace de connexion sécurisé pour l'administration de l'association SOPFFI et la gestion de ses publications."
+        keywords="connexion SOPFFI, administration SOPFFI, espace membre"
+        url="https://sopffi-virtssoft.org/login"
+      />
       <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl shadow-slate-200 divide-y divide-slate-100 overflow-hidden">
         <div className="p-10 text-center">
           <div className="w-20 h-20 bg-sopffi-blue rounded-[2rem] flex items-center justify-center text-white mx-auto mb-8 shadow-xl shadow-blue-200 ring-8 ring-blue-50">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Target, Eye, ShieldCheck, MapPin, Users, Award, Landmark, Search } from 'lucide-react';
+import { Meta } from '../components/Meta';
 
 export function About() {
   const sections = [
@@ -30,6 +31,12 @@ export function About() {
 
   return (
     <div className="bg-white">
+      <Meta 
+        title="Qui Sommes-Nous ? - À Propos de SOPFFI"
+        description="Découvrez l'histoire, la mission, la vision et les valeurs fondamentales de SOPFFI. En savoir plus sur notre Conseil d'Administration et nos antennes locales basées à Goma, Nord-Kivu, RDC."
+        keywords="qui sommes nous SOPFFI, mission SOPFFI, vision SOPFFI, ONG Goma, association humanitaire Nord-Kivu, conseil d'administration SOPFFI"
+        url="https://sopffi-virtssoft.org/a-propos"
+      />
       {/* Header Section */}
       <section className="bg-slate-50 py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

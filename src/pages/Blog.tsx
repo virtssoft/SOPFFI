@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { BASELINE_POSTS, slugify } from '../data/blogData';
 import { api, formatImageUrl } from '../lib/api';
+import { Meta } from '../components/Meta';
 
 interface Post {
   id: string;
@@ -52,6 +53,12 @@ export function Blog() {
 
   return (
     <div className="bg-slate-50 min-h-screen py-20 lg:py-32">
+      <Meta 
+        title="Actualités, Articles & Communiqués - SOPFFI"
+        description="Suivez toute l'actualité de la SOPFFI, nos récents rapports d'impact sur le terrain, nos témoignages de bénéficiaires et nos communiqués officiels en RD Congo."
+        keywords="actualités SOPFFI, rapports terrain Goma, humanitaire RDC blog, communiqués de presse SOPFFI"
+        url="https://sopffi-virtssoft.org/blog"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mb-20 text-center">
            <h1 className="text-5xl font-bold text-slate-900 mb-6 tracking-tight">Actualités & Mises à jour</h1>

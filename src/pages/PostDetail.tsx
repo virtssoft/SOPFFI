@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, User, Tag, MapPin, CheckCircle2, Award } from 'luc
 import { motion } from 'motion/react';
 import { BASELINE_POSTS, slugify } from '../data/blogData';
 import { api, formatImageUrl } from '../lib/api';
+import { Meta } from '../components/Meta';
 
 interface Post {
   title: string;
@@ -116,6 +117,13 @@ export function PostDetail() {
 
   return (
     <div className="bg-slate-50 min-h-screen py-20 lg:py-32">
+      <Meta 
+        title={`${post.title} - SOPFFI`}
+        description={post.excerpt || (post.content ? post.content.substring(0, 160) + '...' : 'Détail de la publication de SOPFFI')}
+        keywords={`${post.tags?.join(', ') || ''}, SOPFFI, actualités RDC, projet terrain, humanitaire`}
+        image={post.imageUrl}
+        type="article"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link
           to={isAction ? "/actions" : "/blog"}

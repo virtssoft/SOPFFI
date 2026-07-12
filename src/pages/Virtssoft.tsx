@@ -19,90 +19,34 @@ import {
   Linkedin, 
   Youtube
 } from 'lucide-react';
+import { Meta } from '../components/Meta';
 
 export function Virtssoft() {
-  React.useEffect(() => {
-    // Save original title and description if any
-    const originalTitle = document.title;
-    
-    // Set optimized SEO Title
-    document.title = "Virtssoft Technologies - Startup Innovante en IA, IoT, Cloud & Énergies Renouvelables";
-
-    // Set or create Meta Description
-    let metaDescription = document.querySelector('meta[name="description"]');
-    let originalDescription = metaDescription ? metaDescription.getAttribute('content') : '';
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
-    }
-    metaDescription.setAttribute('content', 'Virtssoft Technologies est une startup innovante spécialisée dans le développement de solutions intelligentes intégrant l’Intelligence Artificielle (IA), l’Internet des Objets (IoT), le Cloud Computing ainsi que les énergies renouvelables en Afrique. Découvrez NexaPME, Virtssoft Store et nos initiatives.');
-
-    // Set or create Meta Keywords
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    metaKeywords.setAttribute('content', 'Virtssoft, Virtssoft Technologies, startup, intelligence artificielle, IoT, internet des objets, cloud computing, énergies renouvelables, NexaPME, Virtssoft Store, Afrique, transformation numérique, automatisation, développement d\'applications');
-
-    // Create and inject structured JSON-LD data for Google Rich Results
-    const schemaData = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Virtssoft Technologies",
-      "alternateName": "Virtssoft",
-      "url": "https://virtssoft.com",
-      "logo": "https://virtssoft.com/logo.png",
-      "description": "Startup innovante spécialisée dans le développement de solutions intelligentes intégrant l’Intelligence Artificielle, l’Internet des Objets (IoT), le Cloud Computing ainsi que les énergies renouvelables en Afrique.",
-      "sameAs": [
-        "https://www.facebook.com/virtssoft",
-        "https://www.instagram.com/virtssoft?igsh=MTlmZDAwMHhwamN1OQ==",
-        "https://www.linkedin.com/in/virtssoft-technologies-8491603b4",
-        "https://x.com/virtssoft",
-        "https://www.youtube.com/channel/UCvqm3ZF2-GjTmARDwTTPq7g",
-        "https://virtssoft.netlify.app"
-      ],
-      "knowsAbout": [
-        "Artificial Intelligence",
-        "Internet of Things",
-        "Cloud Computing",
-        "Renewable Energy",
-        "Software Engineering",
-        "Enterprise Resource Planning"
-      ]
-    };
-
-    const scriptId = "virtssoft-schema-ld";
-    let script = document.getElementById(scriptId);
-    if (!script) {
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.setAttribute('type', 'application/ld+json');
-      script.innerHTML = JSON.stringify(schemaData);
-      document.head.appendChild(script);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.title = originalTitle;
-      if (metaDescription) {
-        if (originalDescription) {
-          metaDescription.setAttribute('content', originalDescription);
-        } else {
-          metaDescription.remove();
-        }
-      }
-      if (metaKeywords) {
-        metaKeywords.remove();
-      }
-      const existingScript = document.getElementById(scriptId);
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
-  }, []);
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Virtssoft Technologies",
+    "alternateName": "Virtssoft",
+    "url": "https://sopffi-virtssoft.org/virtssoft",
+    "logo": "https://sopffi-virtssoft.org/logo.png",
+    "description": "Startup innovante spécialisée dans le développement de solutions intelligentes intégrant l’Intelligence Artificielle, l’Internet des Objets (IoT), le Cloud Computing ainsi que les énergies renouvelables en Afrique.",
+    "sameAs": [
+      "https://www.facebook.com/virtssoft",
+      "https://www.instagram.com/virtssoft?igsh=MTlmZDAwMHhwamN1OQ==",
+      "https://www.linkedin.com/in/virtssoft-technologies-8491603b4",
+      "https://x.com/virtssoft",
+      "https://www.youtube.com/channel/UCvqm3ZF2-GjTmARDwTTPq7g",
+      "https://virtssoft.netlify.app"
+    ],
+    "knowsAbout": [
+      "Artificial Intelligence",
+      "Internet of Things",
+      "Cloud Computing",
+      "Renewable Energy",
+      "Software Engineering",
+      "Enterprise Resource Planning"
+    ]
+  };
 
   const initiatives = [
     {
@@ -165,6 +109,16 @@ export function Virtssoft() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 pb-20">
+      <Meta 
+        title="Virtssoft Technologies - Startup Innovante en IA, IoT, Cloud & Énergies Renouvelables"
+        description="Virtssoft Technologies est une startup innovante spécialisée dans le développement de solutions intelligentes intégrant l’Intelligence Artificielle (IA), l’Internet des Objets (IoT), le Cloud Computing ainsi que les énergies renouvelables en Afrique."
+        keywords="Virtssoft, Virtssoft Technologies, startup Afrique, intelligence artificielle, IoT, internet des objets, cloud computing, énergies renouvelables, NexaPME, Virtssoft Store, RDC, Goma"
+        url="https://sopffi-virtssoft.org/virtssoft"
+      >
+        <script type="application/ld+json">
+          {JSON.stringify(schemaData)}
+        </script>
+      </Meta>
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-slate-900 text-white py-24 sm:py-32">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(30,58,138,0.3),transparent_50%)]" />

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, formatImageUrl } from '../lib/api';
+import { Meta } from '../components/Meta';
 
 interface Realization {
   id: string;
@@ -361,6 +362,12 @@ export function Actions() {
 
   return (
     <div className="bg-slate-50 min-h-screen py-20 lg:py-28">
+      <Meta 
+        title="Nos Actions & Impact Terrain en RDC - SOPFFI"
+        description="Parcourez les réalisations concrètes de la SOPFFI sur le terrain : agro-pastoral à Kalehe, éducation des orphelins à Goma, cliniques mobiles en Ituri et projets d'autonomisation."
+        keywords="projets SOPFFI, réalisations humanitaires RDC, projets agro-pastoraux Kalehe, assistance humanitaire Ituri, autonomisation femmes Congo"
+        url="https://sopffi-virtssoft.org/actions"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Dynamic Page Header */}
