@@ -14,6 +14,7 @@ import { Blog } from './pages/Blog';
 import { PostDetail } from './pages/PostDetail';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { Virtssoft } from './pages/Virtssoft';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<PostDetail />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/virtssoft" element={<Virtssoft />} />
             <Route 
               path="/dashboard/*" 
               element={

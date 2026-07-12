@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, Heart } from 'lucide-react';
 
@@ -13,11 +11,20 @@ export function VolunteerModal({ isOpen, onClose }: { isOpen: boolean, onClose: 
     e.preventDefault();
     setLoading(true);
     try {
-      await addDoc(collection(db, 'volunteers'), {
-        ...formData,
+      const stored = localStorage.getItem('sopffi_volunteers') || '[]';
+      const volunteers = JSON.parse(stored);
+      const newVolunteer = {
+        id: String(Date.now()),
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        skills: formData.skills,
         status: 'pending',
-        createdAt: serverTimestamp(),
-      });
+        createdAt: new Date().toISOString()
+      };
+      volunteers.push(newVolunteer);
+      localStorage.setItem('sopffi_volunteers', JSON.stringify(volunteers));
+
       setSent(true);
       setTimeout(() => {
         onClose();

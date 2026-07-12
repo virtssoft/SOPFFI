@@ -40,7 +40,7 @@ export function Home() {
     api.getActions()
       .then(data => {
         if (data && data.length > 0) {
-          const sorted = [...data].sort((a, b) => b.id - a.id);
+          const sorted = [...data].sort((a, b) => String(b.id).localeCompare(String(a.id)));
           setLatestActions(sorted.slice(0, 3));
         }
       })

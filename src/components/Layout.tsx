@@ -169,13 +169,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
           <p>&copy; 2024 SOPFFI ASBL. Tous droits réservés.</p>
           <div className="flex gap-6">
-            <span>Développement par <span className="text-white font-bold">virtssoft</span></span>
-            <Link 
-              to="/dashboard" 
-              className="hover:text-white"
-            >
-              Admin
-            </Link>
+            <span>
+              Développement par{' '}
+              <Link to="/virtssoft" className="text-white font-bold hover:text-blue-400 transition-colors">
+                virtssoft
+              </Link>
+            </span>
           </div>
         </div>
       </footer>

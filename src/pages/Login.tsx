@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function Login() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export function Login() {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const handleCustomLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,14 +61,23 @@ export function Login() {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Mot de passe</label>
-              <input 
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none focus:ring-2 focus:ring-sopffi-blue text-sm font-bold"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full p-4 pr-12 rounded-xl border border-slate-100 bg-slate-50 outline-none focus:ring-2 focus:ring-sopffi-blue text-sm font-bold"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button 
               type="submit"
