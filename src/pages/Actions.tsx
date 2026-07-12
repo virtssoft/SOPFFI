@@ -41,7 +41,7 @@ const DOMAINS_LIST = [
   { id: 'Education', name: 'Éducation & Formation', icon: GraduationCap },
   { id: 'Agro-pastoral', name: 'Agro-pastoral', icon: Sprout },
   { id: 'Sante', name: 'Santé & Nutrition', icon: Heart },
-  { id: 'Autonomisation', name: 'Entrepreneuriat & Autonomie', icon: Briefcase },
+  { id: 'Autonomisation', name: 'Entrepreneuriat & Autonomisation', icon: Briefcase },
   { id: 'Droits', name: 'Droits Humains', icon: Scale },
 ];
 

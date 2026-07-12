@@ -13,7 +13,9 @@ import {
   Clock,
   Briefcase,
   Upload,
-  User as UserIcon
+  User as UserIcon,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api, formatImageUrl } from '../lib/api';
@@ -21,7 +23,7 @@ import { api, formatImageUrl } from '../lib/api';
 export function Dashboard() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
 
   const handleLogout = () => {
     logout();
@@ -29,38 +31,53 @@ export function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-100 overflow-hidden font-sans relative">
+      {/* Backdrop for mobile */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)} 
+          className="lg:hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 transition-opacity" 
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`bg-slate-900 text-white w-72 flex-shrink-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 border-b border-slate-800">
+      <aside className={`bg-slate-900 text-white w-72 flex-shrink-0 flex flex-col fixed lg:static inset-y-0 left-0 z-50 transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="p-8 border-b border-slate-800 flex items-center justify-between">
            <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-sopffi-blue rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
                 <LayoutDashboard size={18} />
               </div>
               <span className="font-bold text-lg tracking-tight">SOPFFI Admin</span>
            </div>
+           {/* Close button inside sidebar on mobile */}
+           <button 
+             onClick={() => setIsSidebarOpen(false)}
+             className="lg:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+           >
+             <X size={18} />
+           </button>
         </div>
         
-        <nav className="flex-grow p-4 space-y-1">
-          <Link to="/dashboard" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+        <nav className="flex-grow p-4 space-y-1 overflow-y-auto">
+          <Link to="/dashboard" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <LayoutDashboard size={18} /> Vue d'ensemble
           </Link>
-          <Link to="/dashboard/blog" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/blog" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <FileText size={18} /> Gérer le Blog
           </Link>
-          <Link to="/dashboard/provinces" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/provinces" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <MapPin size={18} /> Activités Provinces
           </Link>
-          <Link to="/dashboard/actions" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/actions" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <MapPin size={18} /> Nos Réalisations
           </Link>
-          <Link to="/dashboard/benevoles" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/benevoles" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <Users size={18} /> Bénévoles
           </Link>
-          <Link to="/dashboard/partenaires" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/partenaires" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <Briefcase size={18} /> Partenaires
           </Link>
-          <Link to="/dashboard/utilisateurs" className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
+          <Link to="/dashboard/utilisateurs" onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)} className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all font-bold text-sm text-slate-400 hover:text-white">
             <UserIcon size={18} /> Utilisateurs
           </Link>
         </nav>
@@ -76,8 +93,24 @@ export function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-y-auto">
-        <div className="p-8 md:p-12 max-w-6xl mx-auto">
+      <main className="flex-grow overflow-y-auto flex flex-col">
+        {/* Mobile Top Bar */}
+        <header className="lg:hidden bg-slate-900 text-white h-16 px-6 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <Menu size={20} />
+            </button>
+            <span className="font-bold text-sm tracking-tight">SOPFFI Admin</span>
+          </div>
+          <span className="text-[9px] bg-sopffi-blue px-2.5 py-1 rounded-lg font-black uppercase tracking-wider text-white">
+            {user?.role || 'admin'}
+          </span>
+        </header>
+
+        <div className="p-4 md:p-8 lg:p-12 max-w-6xl w-full mx-auto flex-grow">
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/blog" element={<BlogManager />} />
@@ -273,21 +306,21 @@ function BlogManager() {
 
   return (
     <div className="space-y-12">
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
            <h2 className="text-2xl font-black text-slate-900">Articles du Blog</h2>
            <p className="text-slate-500 font-medium italic text-sm">Gestion des actualités du site.</p>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+          className="flex items-center justify-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
         >
           {isAdding ? 'Fermer' : <><Plus size={20} /> Nouvel Article</>}
         </button>
       </div>
 
       {isAdding ? (
-        <form onSubmit={handleAdd} className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200 space-y-6 max-w-4xl border border-slate-100">
+        <form onSubmit={handleAdd} className="bg-white p-6 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-xl shadow-slate-200 space-y-6 max-w-4xl border border-slate-100">
           <div className="grid gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Titre de l'article</label>
@@ -340,16 +373,16 @@ function BlogManager() {
       ) : (
         <div className="grid gap-4">
           {posts.map(post => (
-            <div key={post.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group">
-              <div className="flex gap-6 items-center">
+            <div key={post.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                 {post.image_path ? (
                   <img
                     src={formatImageUrl(post.image_path)}
                     alt={post.title}
-                    className="w-14 h-14 bg-slate-100 rounded-2xl object-cover"
+                    className="w-14 h-14 bg-slate-100 rounded-2xl object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold italic">
+                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold italic flex-shrink-0">
                     {post.title[0]}
                   </div>
                 )}
@@ -362,7 +395,7 @@ function BlogManager() {
               </div>
               <button 
                 onClick={() => handleDelete(post.id)}
-                className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all self-end sm:self-auto"
               >
                 <Trash2 size={20} />
               </button>
@@ -404,8 +437,8 @@ function BenevoleManager() {
         <p className="text-slate-500 font-medium italic">Suivi des personnes souhaitant s'engager.</p>
       </header>
       
-      <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
           <thead className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black tracking-widest text-slate-400">
             <tr>
               <th className="px-8 py-5">Nom</th>
@@ -534,21 +567,21 @@ function ActionsManager() {
 
   return (
     <div className="space-y-12">
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
            <h2 className="text-2xl font-black text-slate-900">Nos Réalisations Terrain</h2>
            <p className="text-slate-500 font-medium italic text-sm">Gestion des grands chantiers et rapports d'impact.</p>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+          className="flex items-center justify-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
         >
           {isAdding ? 'Fermer' : <><Plus size={20} /> Nouvelle Réalisation</>}
         </button>
       </div>
 
       {isAdding ? (
-        <form onSubmit={handleAdd} className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200 space-y-6 max-w-4xl border border-slate-100">
+        <form onSubmit={handleAdd} className="bg-white p-6 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-xl shadow-slate-200 space-y-6 max-w-4xl border border-slate-100">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Titre de l'action / projet</label>
@@ -675,16 +708,16 @@ function ActionsManager() {
       ) : (
         <div className="grid gap-4">
           {items.map(act => (
-            <div key={act.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group">
-              <div className="flex gap-6 items-center">
+            <div key={act.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                 {act.image_path ? (
                   <img
                     src={formatImageUrl(act.image_path)}
                     alt={act.title}
-                    className="w-14 h-14 bg-slate-100 rounded-2xl object-cover"
+                    className="w-14 h-14 bg-slate-100 rounded-2xl object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold italic">
+                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold italic flex-shrink-0">
                     {act.title[0]}
                   </div>
                 )}
@@ -697,7 +730,7 @@ function ActionsManager() {
               </div>
               <button 
                 onClick={() => handleDelete(act.id)}
-                className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all self-end sm:self-auto"
               >
                 <Trash2 size={20} />
               </button>
@@ -875,21 +908,21 @@ function UserManager() {
 
   return (
     <div className="space-y-12 font-sans text-slate-700">
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
            <h2 className="text-2xl font-black text-slate-900">Utilisateurs & Administrateurs</h2>
            <p className="text-slate-500 font-medium italic text-sm">Gestion des identifiants et accès pour la table des administrateurs SOPFFI.</p>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all active:scale-95"
+          className="flex items-center justify-center gap-3 px-6 py-3 bg-sopffi-blue text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all active:scale-95"
         >
           {isAdding ? 'Fermer' : <><Plus size={20} /> Nouvel Administrateur</>}
         </button>
       </div>
 
       {isAdding ? (
-        <form onSubmit={handleAdd} className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 max-w-xl space-y-6">
+        <form onSubmit={handleAdd} className="bg-white p-6 sm:p-10 rounded-2xl sm:rounded-[3rem] shadow-xl border border-slate-100 max-w-xl space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Nom complet</label>
@@ -944,8 +977,8 @@ function UserManager() {
           </button>
         </form>
       ) : (
-        <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm">
-          <table className="w-full text-left col-span-full">
+        <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm overflow-x-auto">
+          <table className="w-full text-left min-w-[500px]">
             <thead className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black tracking-widest text-slate-400">
               <tr>
                 <th className="px-8 py-5">Nom</th>

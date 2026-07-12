@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Heart, Users, Briefcase, GraduationCap, Sprout, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Heart, Users, Briefcase, GraduationCap, Sprout, ShieldAlert, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VolunteerModal } from '../components/VolunteerModal';
 import { api, formatImageUrl } from '../lib/api';
+import { BASELINE_POSTS, slugify } from '../data/blogData';
 
 export function Home() {
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
@@ -11,6 +12,10 @@ export function Home() {
   const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1000');
   const [latestActions, setLatestActions] = useState<any[]>([]);
   const [loadingActions, setLoadingActions] = useState<boolean>(true);
+  
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
 
   useEffect(() => {
     // Fetch dynamic partners
@@ -41,7 +46,49 @@ export function Home() {
       })
       .catch(err => console.error('Failed to load actions from API', err))
       .finally(() => setLoadingActions(false));
+
+    // Fetch blog posts for the hero carousel
+    api.getBlogPosts()
+      .then(data => {
+        if (data && data.length > 0) {
+          const sorted = data.map((item: any) => ({
+            id: String(item.id),
+            slug: item.slug || slugify(item.title),
+            title: item.title,
+            content: item.content,
+            excerpt: item.excerpt,
+            author: item.author || 'Admin SOPFFI',
+            publishedAt: item.published_at || item.created_at || new Date().toISOString(),
+            imageUrl: formatImageUrl(item.image_path),
+            tags: item.tags ? item.tags.split(',').map((t: string) => t.trim()) : []
+          })).sort((a: any, b: any) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+          setLatestPosts(sorted);
+        } else {
+          const fallback = BASELINE_POSTS.map(post => ({
+            ...post,
+            imageUrl: post.imageUrl || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200'
+          }));
+          setLatestPosts(fallback);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load blog posts from API, using baseline fallback', err);
+        const fallback = BASELINE_POSTS.map(post => ({
+          ...post,
+          imageUrl: post.imageUrl || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200'
+        }));
+        setLatestPosts(fallback);
+      })
+      .finally(() => setLoadingPosts(false));
   }, []);
+
+  useEffect(() => {
+    if (latestPosts.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % latestPosts.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [latestPosts.length]);
 
   const stats = [
     { label: 'Membres Actifs', value: '1,422', icon: Users },
@@ -75,75 +122,150 @@ export function Home() {
       desc: 'Lutte contre les VBG et défense des droits des femmes et des enfants.',
       color: 'bg-amber-50 text-amber-600',
     },
+    {
+      title: 'Entrepreneuriat & Autonomisation',
+      icon: Briefcase,
+      desc: 'Formations professionnelles, octroi de micro-crédits et accompagnement dans la création de micro-entreprises.',
+      color: 'bg-emerald-50 text-emerald-600',
+    }
   ];
 
   return (
     <div className="overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-52 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="inline-block px-4 py-1.5 bg-blue-100 text-sopffi-blue rounded-full text-sm font-bold mb-6 italic">
-                SOPFFI ASBL - GOMA, RDC
-              </span>
-              <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-8 leading-[1.1]">
-                Bâtir un monde de <span className="text-sopffi-red italic underline decoration-blue-100 underline-offset-8">Dignité</span> pour chaque femme.
-              </h1>
-              <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-xl">
-                La Solidarité pour la promotion pour les Femmes et Familles Indigentes œuvre pour l'autonomisation 
-                socio-économique à travers l'éducation, la protection sociale et le plaidoyer.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link 
-                  to="/actions" 
-                  className="px-8 py-4 bg-sopffi-blue text-white rounded-2xl font-bold text-lg hover:bg-blue-800 shadow-lg shadow-blue-200 transition-all hover:-translate-y-1"
-                >
-                  Découvrir nos Actions
-                </Link>
-                <Link 
-                  to="/a-propos" 
-                  className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
-                >
-                  Notre Histoire
-                </Link>
-              </div>
-            </motion.div>
+      {/* Hero Section Carousel */}
+      <section className="relative pt-10 pb-20 lg:pt-20 lg:pb-32 bg-slate-50 min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
+        {/* Background decorative blobs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl -translate-x-12 -translate-y-12 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-100/30 rounded-full blur-3xl translate-x-12 translate-y-12 pointer-events-none" />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl relative z-10">
-                <img 
-                  src={heroImage} 
-                  alt="SOPFFI Impact" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+          {loadingPosts ? (
+            <div className="grid lg:grid-cols-2 gap-12 items-center animate-pulse">
+              <div className="space-y-6">
+                <div className="h-6 bg-slate-200 rounded w-1/4" />
+                <div className="h-12 bg-slate-200 rounded w-3/4" />
+                <div className="h-12 bg-slate-200 rounded w-5/6" />
+                <div className="h-24 bg-slate-200 rounded w-full" />
+                <div className="h-12 bg-slate-200 rounded w-1/3" />
               </div>
-              {/* Decorative elements */}
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-60 -z-10" />
-              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-red-200 rounded-full blur-3xl opacity-60 -z-10" />
-              <div className="absolute top-1/2 -right-4 translate-y-[-50%] bg-white p-6 rounded-2xl shadow-xl z-20 hidden sm:block border border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-sopffi-blue">
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900 leading-none">1,422</p>
-                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Membres Engagés</p>
-                  </div>
+              <div className="aspect-[4/3] bg-slate-200 rounded-[2rem]" />
+            </div>
+          ) : latestPosts.length > 0 ? (
+            <div className="relative">
+              <AnimatePresence mode="wait">
+                {latestPosts.map((post, index) => {
+                  if (index !== currentSlide) return null;
+                  return (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.6 }}
+                      className="relative min-h-[500px] lg:min-h-[600px] rounded-[3rem] overflow-hidden flex items-center px-6 py-12 sm:px-12 md:px-16 lg:px-24 border border-slate-950/10 shadow-2xl"
+                    >
+                      {/* Background Image of the post with multi-layer high-contrast gradient */}
+                      <div className="absolute inset-0 z-0">
+                        <img 
+                          src={post.imageUrl || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200'} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover transition-transform duration-[10000ms] hover:scale-105"
+                        />
+                        {/* Primary left-to-right gradient for desktop reading flow */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent hidden md:block" />
+                        {/* Primary bottom-to-top gradient for mobile portrait orientation */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent md:hidden" />
+                        {/* Secondary ambient dark overlay to ensure maximum contrast on any source image */}
+                        <div className="absolute inset-0 bg-black/30" />
+                      </div>
+
+                      {/* Content details overlay */}
+                      <div className="relative z-10 max-w-3xl space-y-6 text-white">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <span className="inline-block px-4 py-1.5 bg-sopffi-red text-white rounded-full text-[10px] font-black uppercase tracking-wider italic">
+                            Dernière Actualité
+                          </span>
+                          {post.tags && post.tags.slice(0, 2).map((tag: string, i: number) => (
+                            <span key={i} className="inline-block px-3 py-1 bg-white/10 text-white rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/5">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.15] hover:text-blue-200 transition-colors">
+                          <Link to={`/blog/${post.slug || post.id}`}>
+                            {post.title}
+                          </Link>
+                        </h1>
+
+                        <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-sans max-w-2xl line-clamp-3">
+                          {post.excerpt || post.content.substring(0, 180) + '...'}
+                        </p>
+
+                        <div className="flex items-center gap-3 text-xs text-slate-300 font-bold uppercase tracking-wider">
+                          <span>Par {post.author}</span>
+                          <span>•</span>
+                          <span>{new Date(post.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4 pt-2">
+                          <Link 
+                            to={`/blog/${post.slug || post.id}`} 
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-sopffi-blue text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0"
+                          >
+                            Lire l'article <ArrowRight size={16} />
+                          </Link>
+                          <Link 
+                            to="/blog" 
+                            className="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/20 transition-all backdrop-blur-md"
+                          >
+                            Toutes les actualités
+                          </Link>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {/* Navigation Arrows & Pagination Dots */}
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-12 gap-6 pt-6 border-t border-slate-150">
+                {/* Dots / Indicators */}
+                <div className="flex gap-2.5">
+                  {latestPosts.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentSlide(i)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-8 bg-sopffi-blue' : 'w-2.5 bg-slate-300 hover:bg-slate-400'}`}
+                      aria-label={`Aller au slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Arrows */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setCurrentSlide(prev => (prev - 1 + latestPosts.length) % latestPosts.length)}
+                    className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                    aria-label="Article précédent"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    onClick={() => setCurrentSlide(prev => (prev + 1) % latestPosts.length)}
+                    className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                    aria-label="Article suivant"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white rounded-[3rem] border border-slate-150 p-8 max-w-2xl mx-auto shadow-sm">
+              <p className="text-slate-500 font-medium text-lg italic">Aucune actualité disponible pour l'instant.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -177,7 +299,7 @@ export function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {domains.map((domain, i) => (
               <motion.div
                 key={i}
