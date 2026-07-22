@@ -197,7 +197,7 @@ export const api = {
 
   async getBlogPost(idOrSlug: number | string): Promise<BlogItem> {
     const res = await fetch(`${API_BASE}/api/blog/${idOrSlug}`);
-    if (!res.ok) throw new Error('Article introuvable');
+    if (!res.ok) throw new Error('Article introuvable dans la base de donee');
     const data = await res.json();
     return data;
   },

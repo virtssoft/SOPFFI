@@ -43,7 +43,7 @@ export function About() {
           <div className="max-w-3xl">
             <h1 className="text-5xl font-bold text-slate-900 mb-8">Qui sommes-nous ?</h1>
             <p className="text-xl text-slate-600 leading-relaxed italic">
-              La SOPFFI (Solidarité pour la promotion pour les Femmes et Familles Indigentes) Asbl. est une organisation 
+              La SOPFFI (Solidarité pour la promotion des femmes et familles indigentes.) Asbl. est une organisation 
               de la société civile dédiée à l'autonomisation et à l'amélioration des conditions de vie à Goma, RDC.
             </p>
           </div>
