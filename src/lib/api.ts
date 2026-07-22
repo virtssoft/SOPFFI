@@ -77,6 +77,24 @@ export function getAuthHeader() {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+// Helper to handle unauthorized or expired sessions
+export function handleAuthError(status: number, errorMessage: string): boolean {
+  const isExpired = 
+    status === 401 || 
+    errorMessage.toLowerCase().includes('expir') || 
+    errorMessage.toLowerCase().includes('session');
+    
+  if (isExpired) {
+    removeStoredToken();
+    localStorage.removeItem('sopffi_user');
+    sessionStorage.removeItem('sopffi_user');
+    // Redirect to login page with expired flag so they can re-login
+    window.location.href = '/login?expired=true';
+    return true;
+  }
+  return false;
+}
+
 // Helper to format image paths
 export function formatImageUrl(path: string | undefined): string {
   if (!path) return 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=600';
@@ -89,44 +107,29 @@ export function formatImageUrl(path: string | undefined): string {
 export const api = {
   // Auth / Connexion
   async login(email: string, password: string) {
+    const cleanEmail = email.trim();
     const fd = new FormData();
-    fd.append('email', email);
+    fd.append('email', cleanEmail);
     fd.append('password', password);
 
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        body: fd,
-      });
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      body: fd,
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        return {
-          token: data.token || data.jwt || 'local-admin-token',
-          user: {
-            name: data.user?.full_name || data.user?.name || 'Administrateur',
-            email: data.user?.email || email,
-            role: data.user?.role || 'admin'
-          }
-        };
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Identifiants de connexion invalides');
-      }
-    } catch (e: any) {
-      console.warn("PHP REST login error, attempting local developer fallback", e);
-      // Fallback for local developer login so the site is always testable
-      if (email === 'admin@sopffi.org' && password === '0987654321') {
-        return {
-          token: 'local-admin-token-fallback',
-          user: {
-            name: 'Administrateur SOPFFI (Local)',
-            email: email,
-            role: 'admin'
-          }
-        };
-      }
-      throw new Error(e.message || 'Identifiants de connexion invalides ou serveur inaccessible.');
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        token: data.token || data.jwt || 'local-admin-token',
+        user: {
+          name: data.user?.full_name || data.user?.name || 'Administrateur',
+          email: data.user?.email || cleanEmail,
+          role: data.user?.role || 'admin'
+        }
+      };
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Identifiants de connexion invalides ou compte inactif.');
     }
   },
 
@@ -156,7 +159,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la création de la réalisation');
+      const errMsg = errData.error || 'Erreur lors de la création de la réalisation';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));
@@ -172,7 +177,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la suppression de la réalisation');
+      const errMsg = errData.error || 'Erreur lors de la suppression de la réalisation';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));
@@ -204,7 +211,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la publication de l\'article');
+      const errMsg = errData.error || 'Erreur lors de la publication de l\'article';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));
@@ -220,7 +229,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la suppression de l\'article');
+      const errMsg = errData.error || 'Erreur lors de la suppression de l\'article';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));
@@ -228,20 +239,10 @@ export const api = {
 
   // Partenaires (Partner Logos)
   async getPartners(): Promise<PartnerItem[]> {
-    try {
-      const res = await fetch(`${API_BASE}/api/partenaires`);
-      if (!res.ok) throw new Error('Failed to load partners from API');
-      const data = await res.json();
-      return data;
-    } catch (e) {
-      console.warn("REST partners fetch failed, using beautiful default fallback:", e);
-      return [
-        { name: 'UNICEF', url: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/UNICEF_Logo.svg' },
-        { name: 'USAID', url: 'https://upload.wikimedia.org/wikipedia/commons/1/17/USAID-Identity.svg' },
-        { name: 'WHO', url: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/WHO_logo.svg' },
-        { name: 'UNHCR', url: 'https://upload.wikimedia.org/wikipedia/commons/0/07/UNHCR_Logo.svg' },
-      ];
-    }
+    const res = await fetch(`${API_BASE}/api/partenaires`);
+    if (!res.ok) throw new Error('Impossible de charger les partenaires');
+    const data = await res.json();
+    return data;
   },
 
   async createPartner(formData: FormData): Promise<any> {
@@ -256,21 +257,19 @@ export const api = {
 
   // Users Management / Utilisateurs
   async getUsers(): Promise<any[]> {
-    try {
-      const res = await fetch(`${API_BASE}/api/users`, {
-        headers: {
-          ...getAuthHeader(),
-        },
-      });
-      if (!res.ok) throw new Error('Impossible de charger les utilisateurs');
-      const data = await res.json();
-      return data;
-    } catch (e) {
-      console.warn("Failed to fetch users, using local fallback", e);
-      return [
-        { id: 'default-admin', full_name: 'Administrateur SOPFFI', email: 'admin@sopffi.org', role: 'admin' }
-      ];
+    const res = await fetch(`${API_BASE}/api/users`, {
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error || 'Impossible de charger les utilisateurs';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
+    const data = await res.json();
+    return data;
   },
 
   async createUser(userData: any): Promise<any> {
@@ -290,7 +289,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la création de l\'utilisateur');
+      const errMsg = errData.error || 'Erreur lors de la création de l\'utilisateur';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));
@@ -306,7 +307,9 @@ export const api = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Erreur lors de la suppression de l\'utilisateur');
+      const errMsg = errData.error || 'Erreur lors de la suppression de l\'utilisateur';
+      handleAuthError(res.status, errMsg);
+      throw new Error(errMsg);
     }
 
     return await res.json().catch(() => ({ success: true }));

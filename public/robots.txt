@@ -1,0 +1,8 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /favicon.jpg
+Allow: /sitemap.xml
+
+# Sitemaps
+Sitemap: https://sopffi-virtssoft.org/sitemap.xml

@@ -4,7 +4,7 @@ import { Heart, Users, Briefcase, GraduationCap, Sprout, ShieldAlert, ArrowRight
 import { Link } from 'react-router-dom';
 import { VolunteerModal } from '../components/VolunteerModal';
 import { api, formatImageUrl } from '../lib/api';
-import { BASELINE_POSTS, slugify } from '../data/blogData';
+import { slugify } from '../data/blogData';
 import { Meta } from '../components/Meta';
 
 export function Home() {
@@ -43,9 +43,14 @@ export function Home() {
         if (data && data.length > 0) {
           const sorted = [...data].sort((a, b) => String(b.id).localeCompare(String(a.id)));
           setLatestActions(sorted.slice(0, 3));
+        } else {
+          setLatestActions([]);
         }
       })
-      .catch(err => console.error('Failed to load actions from API', err))
+      .catch(err => {
+        console.error('Failed to load actions from API', err);
+        setLatestActions([]);
+      })
       .finally(() => setLoadingActions(false));
 
     // Fetch blog posts for the hero carousel
@@ -65,20 +70,12 @@ export function Home() {
           })).sort((a: any, b: any) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
           setLatestPosts(sorted);
         } else {
-          const fallback = BASELINE_POSTS.map(post => ({
-            ...post,
-            imageUrl: post.imageUrl || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200'
-          }));
-          setLatestPosts(fallback);
+          setLatestPosts([]);
         }
       })
       .catch(err => {
-        console.error('Failed to load blog posts from API, using baseline fallback', err);
-        const fallback = BASELINE_POSTS.map(post => ({
-          ...post,
-          imageUrl: post.imageUrl || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200'
-        }));
-        setLatestPosts(fallback);
+        console.error('Failed to load blog posts from API', err);
+        setLatestPosts([]);
       })
       .finally(() => setLoadingPosts(false));
   }, []);

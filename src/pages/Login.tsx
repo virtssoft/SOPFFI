@@ -14,6 +14,13 @@ export function Login() {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
 
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setError('Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter s\'il vous plaît.');
+    }
+  }, []);
+
   const handleCustomLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, User, ArrowRight, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { BASELINE_POSTS, slugify } from '../data/blogData';
+import { slugify } from '../data/blogData';
 import { api, formatImageUrl } from '../lib/api';
 import { Meta } from '../components/Meta';
 
@@ -26,21 +26,25 @@ export function Blog() {
     async function fetchPosts() {
       try {
         const responseList = await api.getBlogPosts();
-        const postsData: Post[] = responseList.map(item => ({
-          id: String(item.id),
-          slug: item.slug || slugify(item.title),
-          title: item.title,
-          content: item.content,
-          excerpt: item.excerpt,
-          author: item.author || 'Admin SOPFFI',
-          publishedAt: item.published_at || item.created_at || new Date().toISOString(),
-          imageUrl: formatImageUrl(item.image_path),
-          tags: item.tags ? item.tags.split(',').map(t => t.trim()) : []
-        }));
-        
-        // Sort descending by date
-        const sorted = [...postsData].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-        setPosts(sorted);
+        if (responseList && responseList.length > 0) {
+          const postsData: Post[] = responseList.map(item => ({
+            id: String(item.id),
+            slug: item.slug || slugify(item.title),
+            title: item.title,
+            content: item.content,
+            excerpt: item.excerpt,
+            author: item.author || 'Admin SOPFFI',
+            publishedAt: item.published_at || item.created_at || new Date().toISOString(),
+            imageUrl: formatImageUrl(item.image_path),
+            tags: item.tags ? item.tags.split(',').map(t => t.trim()) : []
+          }));
+          
+          // Sort descending by date
+          const sorted = [...postsData].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+          setPosts(sorted);
+        } else {
+          setPosts([]);
+        }
       } catch (error) {
         console.error('Error fetching posts from SOPFFI API:', error);
         setPosts([]);

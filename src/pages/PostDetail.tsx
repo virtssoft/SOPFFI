@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag, MapPin, CheckCircle2, Award } from 'lucide-react';
 import { motion } from 'motion/react';
-import { BASELINE_POSTS, slugify } from '../data/blogData';
 import { api, formatImageUrl } from '../lib/api';
 import { Meta } from '../components/Meta';
 
@@ -39,16 +38,9 @@ export function PostDetail() {
       try {
         let matched: any = null;
         if (isActionRoute) {
+          // Fetch from API
           matched = await api.getAction(id);
         } else {
-          // Try local baseline posts first
-          const localPost = BASELINE_POSTS.find(p => p.id === id || p.slug === id || slugify(p.title) === id);
-          if (localPost) {
-            setPost(localPost);
-            setLoading(false);
-            return;
-          }
-
           // Fetch from API
           matched = await api.getBlogPost(id);
         }
