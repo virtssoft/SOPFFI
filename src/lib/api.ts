@@ -108,13 +108,15 @@ export const api = {
   // Auth / Connexion
   async login(email: string, password: string) {
     const cleanEmail = email.trim();
-    const fd = new FormData();
-    fd.append('email', cleanEmail);
-    fd.append('password', password);
-
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
-      body: fd,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: cleanEmail,
+        password: password,
+      }),
     });
 
     if (res.ok) {
@@ -273,18 +275,18 @@ export const api = {
   },
 
   async createUser(userData: any): Promise<any> {
-    const fd = new FormData();
-    fd.append('full_name', userData.full_name || userData.name || '');
-    fd.append('email', userData.email);
-    fd.append('password', userData.password);
-    fd.append('role', userData.role || 'admin');
-
     const res = await fetch(`${API_BASE}/api/users`, {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         ...getAuthHeader(),
       },
-      body: fd,
+      body: JSON.stringify({
+        full_name: userData.full_name || userData.name || '',
+        email: userData.email,
+        password: userData.password,
+        role: userData.role || 'admin',
+      }),
     });
 
     if (!res.ok) {
