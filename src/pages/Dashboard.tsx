@@ -18,7 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { api, formatImageUrl } from '../lib/api';
+import { api, formatImageUrl, getCleanPartnerName } from '../lib/api';
 import { Meta } from '../components/Meta';
 
 export function Dashboard() {
@@ -508,7 +508,8 @@ function ActionsManager() {
     content: '',
     beneficiaries: '',
     status: 'Réalisé',
-    key_achievements: ''
+    key_achievements: '',
+    published_at: new Date().toISOString().substring(0, 10)
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -527,15 +528,22 @@ function ActionsManager() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!imageFile) {
+      alert("Une image d'illustration est obligatoire pour créer une réalisation.");
+      return;
+    }
     setSubmitting(true);
     try {
       const d = new FormData();
       Object.entries(formData).forEach(([k, v]) => {
-        d.append(k, v as string);
+        if (k === 'key_achievements') {
+          const lines = (v as string).split('\n').map(l => l.trim()).filter(Boolean);
+          d.append(k, JSON.stringify(lines));
+        } else {
+          d.append(k, v as string);
+        }
       });
-      if (imageFile) {
-        d.append('image', imageFile);
-      }
+      d.append('image', imageFile);
       await api.createAction(d);
       setIsAdding(false);
       setImageFile(null);
@@ -549,7 +557,8 @@ function ActionsManager() {
         content: '',
         beneficiaries: '',
         status: 'Réalisé',
-        key_achievements: ''
+        key_achievements: '',
+        published_at: new Date().toISOString().substring(0, 10)
       });
       fetchItems();
     } catch (err) {
@@ -664,12 +673,23 @@ function ActionsManager() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Image d'illustration (.png, .jpg, .webp)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Date de l'action / publication</label>
+              <input 
+                type="date"
+                required
+                value={formData.published_at}
+                onChange={e => setFormData({...formData, published_at: e.target.value})}
+                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm font-bold font-sans"
+              />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-sopffi-blue ml-2">Image d'illustration (.png, .jpg, .webp) - *Requis</label>
               <input 
                 type="file"
                 accept="image/*"
+                required
                 onChange={e => setImageFile(e.target.files?.[0] || null)}
-                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm text-slate-500"
+                className="w-full p-4 rounded-xl border border-slate-100 bg-slate-50 outline-none text-sm text-slate-500 font-bold"
               />
             </div>
             <div className="md:col-span-2 space-y-2">
@@ -845,7 +865,7 @@ function PartenaireManager() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="font-extrabold text-xs text-slate-700 uppercase tracking-tight">{p.name || `Partenaire #${index + 1}`}</p>
+                <p className="font-extrabold text-xs text-slate-700 uppercase tracking-tight">{getCleanPartnerName(p.name) || `Partenaire #${index + 1}`}</p>
                 <span className="inline-block px-2.5 py-0.5 bg-slate-50 border border-slate-100 rounded-full text-[9px] font-bold text-slate-400">
                   Logo actif
                 </span>

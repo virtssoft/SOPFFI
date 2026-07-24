@@ -103,6 +103,30 @@ export function formatImageUrl(path: string | undefined): string {
   return `${API_BASE}${cleanPath}`;
 }
 
+// Helper to format partner names from filenames
+export function getCleanPartnerName(name: string | undefined): string {
+  if (!name) return 'Partenaire';
+  // Remove file extension and folder paths if any
+  const baseName = name.split('/').pop() || name;
+  const clean = baseName.toLowerCase().replace(/\.[^/.]+$/, "");
+  
+  if (clean === 'partners1' || clean === 'partner1') return 'UNICEF RDC';
+  if (clean === 'partners2' || clean === 'partner2') return 'USAID Congo';
+  if (clean === 'partners3' || clean === 'partner3') return 'PNUD RDC';
+  if (clean === 'partners4' || clean === 'partner4') return 'HEAL Africa';
+  if (clean === 'partners5' || clean === 'partner5') return 'Fonds pour les Femmes Congolaises (FFC)';
+  if (clean === 'partners6' || clean === 'partner6') return 'Union Européenne';
+  if (clean === 'partners7' || clean === 'partner7') return 'CARITAS Goma';
+  if (clean === 'partners8' || clean === 'partner8') return 'PAM (WFP)';
+  if (clean === 'partners9' || clean === 'partner9') return 'Partenaire Stratégique';
+  
+  // Clean string as fallback
+  return baseName
+    .replace(/\.[^/.]+$/, "") // remove extension
+    .replace(/[-_]+/g, ' ') // replace dashes/underscores with space
+    .replace(/\b\w/g, c => c.toUpperCase()); // capitalize words
+}
+
 // CRUD / API methods using the real PHP REST API
 export const api = {
   // Auth / Connexion

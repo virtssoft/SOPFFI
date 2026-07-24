@@ -3,13 +3,23 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Users, Briefcase, GraduationCap, Sprout, ShieldAlert, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VolunteerModal } from '../components/VolunteerModal';
-import { api, formatImageUrl } from '../lib/api';
+import { api, formatImageUrl, getCleanPartnerName } from '../lib/api';
 import { slugify } from '../data/blogData';
 import { Meta } from '../components/Meta';
 
 export function Home() {
   const [isVolunteerModalOpen, setIsVolunteerModalOpen] = useState(false);
-  const [partnerLogos, setPartnerLogos] = useState<any[]>([]);
+  const [partnerLogos, setPartnerLogos] = useState<any[]>([
+    { name: 'partners1', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners1.png' },
+    { name: 'partners2', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners2.jpeg' },
+    { name: 'partners3', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners3.jpeg' },
+    { name: 'partners4', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners4.jpeg' },
+    { name: 'partners5', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners5.jpeg' },
+    { name: 'partners6', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners6.jpeg' },
+    { name: 'partners7', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners7.jpeg' },
+    { name: 'partners8', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners8.jpeg' },
+    { name: 'partners9', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners9.jpeg' }
+  ]);
   const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1000');
   const [latestActions, setLatestActions] = useState<any[]>([]);
   const [loadingActions, setLoadingActions] = useState<boolean>(true);
@@ -356,75 +366,56 @@ export function Home() {
                 >
                   <img
                     src={partner.url}
-                    alt={partner.name}
+                    alt={getCleanPartnerName(partner.name)}
                     className="max-h-16 max-w-[200px] object-contain transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const txt = parent.querySelector('.partner-text-fallback');
+                        if (txt) (txt as HTMLElement).style.display = 'block';
+                      }
                     }}
                   />
-                  {!partner.url && (
-                    <span className="font-extrabold text-slate-800 text-sm">{partner.name}</span>
-                  )}
+                  <span className="partner-text-fallback font-extrabold text-slate-800 text-sm hidden">
+                    {getCleanPartnerName(partner.name)}
+                  </span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="flex gap-8 animate-infinite-scroll py-4 hover:[animation-play-state:paused] cursor-pointer w-max">
-              {/* Round 1 of Logos */}
               {[
-                { name: 'UNICEF RDC', tag: 'Nations Unies', logoText: 'UN', color: 'text-sky-600 bg-sky-50 border-sky-100' },
-                { name: 'USAID Congo', tag: 'Aide Internationale', logoText: 'US', color: 'text-red-700 bg-red-50 border-red-100' },
-                { name: 'PNUD RDC', tag: 'Nations Unies', logoText: 'PN', color: 'text-blue-600 bg-blue-50 border-blue-100' },
-                { name: 'HEAL Africa', tag: 'Santé & Protection', logoText: 'HA', color: 'text-violet-600 bg-violet-50 border-violet-100' },
-                { name: 'Fonds Femmes Congolaises', tag: 'Genre & Plaidoyer', logoText: 'FC', color: 'text-rose-600 bg-rose-50 border-rose-100' },
-                { name: 'Union Européenne', tag: 'Impact Européen', logoText: 'UE', color: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
-                { name: 'CARITAS Goma', tag: 'Secours Humanitaire', logoText: 'CA', color: 'text-amber-600 bg-amber-50 border-amber-100' },
-                { name: 'PAM (WFP)', tag: 'Urgence Alimentaire', logoText: 'PM', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+                { name: 'partners1', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners1.png' },
+                { name: 'partners2', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners2.jpeg' },
+                { name: 'partners3', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners3.jpeg' },
+                { name: 'partners4', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners4.jpeg' },
+                { name: 'partners5', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners5.jpeg' },
+                { name: 'partners6', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners6.jpeg' },
+                { name: 'partners7', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners7.jpeg' },
+                { name: 'partners8', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners8.jpeg' },
+                { name: 'partners9', url: 'https://apisopffi.ndfdasbl.org/uploads/partenaires/partners9.jpeg' }
               ].map((partner, index) => (
                 <div
                   key={`p1-${index}`}
-                  className="flex items-center gap-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-6 py-4 shadow-sm hover:shadow-md transition-all duration-300 min-w-[260px]"
+                  className="flex items-center justify-center bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-10 py-5 shadow-sm hover:shadow-md transition-all duration-300 min-w-[240px] h-24"
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm border flex-shrink-0 ${partner.color}`}>
-                    {partner.logoText}
-                  </div>
-                  <div className="text-left">
-                    <h4 className="font-extrabold text-slate-800 text-sm leading-tight tracking-tight whitespace-nowrap">
-                      {partner.name}
-                    </h4>
-                    <p className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
-                      {partner.tag}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {/* Duplicate Round 2 of Logos for seamless marquee wrapping */}
-              {[
-                { name: 'UNICEF RDC', tag: 'Nations Unies', logoText: 'UN', color: 'text-sky-600 bg-sky-50 border-sky-100' },
-                { name: 'USAID Congo', tag: 'Aide Internationale', logoText: 'US', color: 'text-red-700 bg-red-50 border-red-100' },
-                { name: 'PNUD RDC', tag: 'Nations Unies', logoText: 'PN', color: 'text-blue-600 bg-blue-50 border-blue-100' },
-                { name: 'HEAL Africa', tag: 'Santé & Protection', logoText: 'HA', color: 'text-violet-600 bg-violet-50 border-violet-100' },
-                { name: 'Fonds Femmes Congolaises', tag: 'Genre & Plaidoyer', logoText: 'FC', color: 'text-rose-600 bg-rose-50 border-rose-100' },
-                { name: 'Union Européenne', tag: 'Impact Européen', logoText: 'UE', color: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
-                { name: 'CARITAS Goma', tag: 'Secours Humanitaire', logoText: 'CA', color: 'text-amber-600 bg-amber-50 border-amber-100' },
-                { name: 'PAM (WFP)', tag: 'Urgence Alimentaire', logoText: 'PM', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-              ].map((partner, index) => (
-                <div
-                  key={`p2-${index}`}
-                  className="flex items-center gap-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 px-6 py-4 shadow-sm hover:shadow-md transition-all duration-300 min-w-[260px]"
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm border flex-shrink-0 ${partner.color}`}>
-                    {partner.logoText}
-                  </div>
-                  <div className="text-left">
-                    <h4 className="font-extrabold text-slate-800 text-sm leading-tight tracking-tight whitespace-nowrap">
-                      {partner.name}
-                    </h4>
-                    <p className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
-                      {partner.tag}
-                    </p>
-                  </div>
+                  <img
+                    src={partner.url}
+                    alt={getCleanPartnerName(partner.name)}
+                    className="max-h-16 max-w-[200px] object-contain transition-transform duration-300 hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const txt = parent.querySelector('.partner-text-fallback');
+                        if (txt) (txt as HTMLElement).style.display = 'block';
+                      }
+                    }}
+                  />
+                  <span className="partner-text-fallback font-extrabold text-slate-800 text-sm hidden">
+                    {getCleanPartnerName(partner.name)}
+                  </span>
                 </div>
               ))}
             </div>
